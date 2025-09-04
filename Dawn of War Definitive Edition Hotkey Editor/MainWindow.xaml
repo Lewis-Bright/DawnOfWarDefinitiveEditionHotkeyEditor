@@ -1,0 +1,58 @@
+﻿<Window x:Class="Dawn_of_War_Definitive_Edition_Hotkey_Editor.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="DoW Hotkey Reader" Height="600" Width="960" MinWidth="760" MinHeight="480">
+    <DockPanel>
+
+        <!-- Top menu -->
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="_File">
+                <MenuItem Header="_Open…" Click="Open_Click" />
+                <MenuItem Header="Open _Defaults…" Click="OpenDefaults_Click" />
+                <Separator />
+                <MenuItem Header="E_xit" Click="Exit_Click" />
+            </MenuItem>
+            <MenuItem Header="_View">
+                <MenuItem Header="Show _Conflicts Only"
+                          IsCheckable="True"
+                          Checked="ConflictsOnly_Checked"
+                          Unchecked="ConflictsOnly_Checked" />
+            </MenuItem>
+        </Menu>
+
+        <!-- Bottom status bar -->
+        <StatusBar DockPanel.Dock="Bottom">
+            <StatusBarItem>
+                <TextBlock x:Name="StatusText" Text="Ready" />
+            </StatusBarItem>
+        </StatusBar>
+
+        <!-- Main table -->
+        <Grid>
+            <DataGrid x:Name="Grid"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      Margin="6">
+                <DataGrid.Resources>
+                    <!-- Tint conflict rows light red -->
+                    <Style TargetType="DataGridRow">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsConflict}" Value="True">
+                                <Setter Property="Background" Value="#FFFFEEEE"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </DataGrid.Resources>
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Section" Binding="{Binding Section}" Width="150"/>
+                    <DataGridTextColumn Header="Action"  Binding="{Binding Action}"  Width="*"/>
+                    <DataGridTextColumn Header="Binding" Binding="{Binding Binding}" Width="220"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Grid>
+
+    </DockPanel>
+</Window>

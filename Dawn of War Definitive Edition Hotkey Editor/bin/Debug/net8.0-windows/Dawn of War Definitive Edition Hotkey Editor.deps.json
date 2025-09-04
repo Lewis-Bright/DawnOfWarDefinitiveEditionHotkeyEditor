@@ -1,0 +1,23 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v8.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v8.0": {
+      "Dawn of War Definitive Edition Hotkey Editor/1.0.0": {
+        "runtime": {
+          "Dawn of War Definitive Edition Hotkey Editor.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "Dawn of War Definitive Edition Hotkey Editor/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}
