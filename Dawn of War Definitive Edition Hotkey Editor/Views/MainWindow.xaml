@@ -1,0 +1,69 @@
+﻿<Window x:Class="Dawn_of_War_Definitive_Edition_Hotkey_Editor.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="DOW: Hotkey Editor" Height="600" Width="900">
+    <DockPanel>
+        <ToolBar DockPanel.Dock="Top" Padding="4">
+            <TextBlock Text="Profile1 Preset:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+            <ComboBox Width="320"
+                ItemsSource="{Binding Presets}"
+                SelectedItem="{Binding SelectedPreset}"
+                DisplayMemberPath="Name"/>
+            <Button Content="+" Width="28" Height="28" Margin="8,0,0,0"
+                Click="CreatePreset_Click"/>
+            <Button Content="Delete" Width="50" Height="28" Margin="6,0,0,0"
+              Command="{Binding DeletePresetCommand}"/>
+        </ToolBar>
+
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="200"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <ListBox Grid.Column="0"
+               ItemsSource="{Binding Sections}"
+               SelectedItem="{Binding SelectedSection}"
+               DisplayMemberPath="Display"/>
+
+            <DataGrid x:Name="KeysGrid" Grid.Column="1"
+                ItemsSource="{Binding Rows}"
+                AutoGenerateColumns="False" IsReadOnly="True" Margin="6">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Action" Binding="{Binding DisplayAction}" Width="*"/>
+                    <DataGridTemplateColumn Header="Binding" Width="220">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding Binding}" VerticalAlignment="Center" Margin="6,0,6,0" Grid.Column="0"/>
+                                    <Button x:Name="EditButton"
+                          Content="✎"
+                          Width="28" Height="24" Padding="0" Margin="0,0,4,0" Grid.Column="1"
+                          Click="EditBinding_Click">
+                                        <Button.Style>
+                                            <Style TargetType="Button">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding DataContext.IsBaseFileLoaded, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
+                                    </Button>
+                                </Grid>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Grid>
+    </DockPanel>
+</Window>

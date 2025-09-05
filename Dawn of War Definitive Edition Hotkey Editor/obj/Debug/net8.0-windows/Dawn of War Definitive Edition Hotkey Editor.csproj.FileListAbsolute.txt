@@ -3,8 +3,6 @@ C:\Users\lewis\dev\Dawn of War Definitive Edition Hotkey Editor\Dawn of War Defi
 C:\Users\lewis\dev\Dawn of War Definitive Edition Hotkey Editor\Dawn of War Definitive Edition Hotkey Editor\bin\Debug\net8.0-windows\Dawn of War Definitive Edition Hotkey Editor.runtimeconfig.json
 C:\Users\lewis\dev\Dawn of War Definitive Edition Hotkey Editor\Dawn of War Definitive Edition Hotkey Editor\bin\Debug\net8.0-windows\Dawn of War Definitive Edition Hotkey Editor.dll
 C:\Users\lewis\dev\Dawn of War Definitive Edition Hotkey Editor\Dawn of War Definitive Edition Hotkey Editor\bin\Debug\net8.0-windows\Dawn of War Definitive Edition Hotkey Editor.pdb
-C:\Users\lewis\dev\Dawn of War Definitive Edition Hotkey Editor\Dawn of War Definitive Edition Hotkey Editor\obj\Debug\net8.0-windows\MainWindow.baml
-C:\Users\lewis\dev\Dawn of War Definitive Edition Hotkey Editor\Dawn of War Definitive Edition Hotkey Editor\obj\Debug\net8.0-windows\MainWindow.g.cs
 C:\Users\lewis\dev\Dawn of War Definitive Edition Hotkey Editor\Dawn of War Definitive Edition Hotkey Editor\obj\Debug\net8.0-windows\App.g.cs
 C:\Users\lewis\dev\Dawn of War Definitive Edition Hotkey Editor\Dawn of War Definitive Edition Hotkey Editor\obj\Debug\net8.0-windows\Dawn of War Definitive Edition Hotkey Editor_MarkupCompile.cache
 C:\Users\lewis\dev\Dawn of War Definitive Edition Hotkey Editor\Dawn of War Definitive Edition Hotkey Editor\obj\Debug\net8.0-windows\Dawn of War Definitive Edition Hotkey Editor.g.resources
@@ -17,3 +15,5 @@ C:\Users\lewis\dev\Dawn of War Definitive Edition Hotkey Editor\Dawn of War Defi
 C:\Users\lewis\dev\Dawn of War Definitive Edition Hotkey Editor\Dawn of War Definitive Edition Hotkey Editor\obj\Debug\net8.0-windows\Dawn of War Definitive Edition Hotkey Editor.pdb
 C:\Users\lewis\dev\Dawn of War Definitive Edition Hotkey Editor\Dawn of War Definitive Edition Hotkey Editor\obj\Debug\net8.0-windows\Dawn of War Definitive Edition Hotkey Editor.genruntimeconfig.cache
 C:\Users\lewis\dev\Dawn of War Definitive Edition Hotkey Editor\Dawn of War Definitive Edition Hotkey Editor\obj\Debug\net8.0-windows\ref\Dawn of War Definitive Edition Hotkey Editor.dll
+C:\Users\lewis\dev\Dawn of War Definitive Edition Hotkey Editor\Dawn of War Definitive Edition Hotkey Editor\obj\Debug\net8.0-windows\Views\MainWindow.baml
+C:\Users\lewis\dev\Dawn of War Definitive Edition Hotkey Editor\Dawn of War Definitive Edition Hotkey Editor\obj\Debug\net8.0-windows\Views\MainWindow.g.cs

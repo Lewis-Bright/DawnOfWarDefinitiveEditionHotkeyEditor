@@ -92,7 +92,7 @@ namespace Dawn_of_War_Definitive_Edition_Hotkey_Editor {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/Dawn of War Definitive Edition Hotkey Editor;V1.0.0.0;component/mainwindow.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/Dawn of War Definitive Edition Hotkey Editor;component/mainwindow.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\MainWindow.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);
