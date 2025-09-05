@@ -7,13 +7,16 @@
         Title="DOW: Hotkey Editor" Height="600" Width="900">
     <DockPanel>
         <ToolBar DockPanel.Dock="Top" Padding="4">
-            <TextBlock Text="Profile1 Preset:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+            <TextBlock Text="Profile:" VerticalAlignment="Center" Margin="0,0,6,0"/>
             <ComboBox Width="320"
                 ItemsSource="{Binding Presets}"
                 SelectedItem="{Binding SelectedPreset}"
                 DisplayMemberPath="Name"/>
-            <Button Content="+" Width="28" Height="28" Margin="8,0,0,0"
-                Click="CreatePreset_Click"/>
+            <Button
+                Content="New profile"
+                Width="140" Height="28"
+                Margin="8,0,0,0"
+                Click="CreatePreset_Click" />
             <Button Content="Delete" Width="50" Height="28" Margin="6,0,0,0"
               Command="{Binding DeletePresetCommand}"/>
         </ToolBar>

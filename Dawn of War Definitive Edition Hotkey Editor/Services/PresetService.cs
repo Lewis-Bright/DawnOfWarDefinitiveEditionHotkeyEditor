@@ -45,29 +45,31 @@ namespace Dawn_of_War_Definitive_Edition_Hotkey_Editor.Services
             }
             return list;
         }
-
-        public static string CreatePresetFromKeydefaults(string desiredNameNoExt)
+        public static string CreatePresetFromExisting(string baseFullPath, string desiredNameNoExt)
         {
-            var dir = GetProfile1Path();
-            if (!Directory.Exists(dir)) throw new DirectoryNotFoundException(dir);
+            if (string.IsNullOrWhiteSpace(baseFullPath))
+                throw new ArgumentException("Base path is required.", nameof(baseFullPath));
 
+            var dir = GetProfile1Path();
+            if (!Directory.Exists(dir))
+                throw new DirectoryNotFoundException(dir);
+
+            if (!File.Exists(baseFullPath))
+                throw new FileNotFoundException("Base profile not found.", baseFullPath);
+
+            // Sanitize and ensure unique file name
             var safe = new string(desiredNameNoExt.Trim()
-                .Select(ch => char.IsLetterOrDigit(ch) || ch == '_' || ch == '-' ? ch : '_').ToArray());
+                .Select(ch => char.IsLetterOrDigit(ch) || ch == '_' || ch == '-' ? ch : '_')
+                .ToArray());
 
             var path = Path.Combine(dir, safe + ".lua");
             int i = 2;
-            while (File.Exists(path)) path = Path.Combine(dir, $"{safe}_{i++}.lua");
+            while (File.Exists(path))
+                path = Path.Combine(dir, $"{safe}_{i++}.lua");
 
-            var keydefaults = Directory.EnumerateFiles(dir, "*.lua", SearchOption.TopDirectoryOnly)
-                .FirstOrDefault(f => string.Equals(Path.GetFileName(f), "KEYDEFAULTS.LUA", StringComparison.OrdinalIgnoreCase));
+            File.Copy(baseFullPath, path, overwrite: false);
 
-            if (keydefaults != null) File.Copy(keydefaults, path, overwrite: false);
-            else
-            {
-                var content = "bindings = {\n}\n\ncamera_bindings = {\n}";
-                File.WriteAllText(path, content, new UTF8Encoding(false));
-            }
-
+            // Update the locstring so the new file displays correctly
             LuaWriter.SetBindingsLocstring(path, Path.GetFileNameWithoutExtension(path));
             return path;
         }

@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Dawn of War Definitive Edition Hotkey Editor")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5316d0ba7f4102f3d101a97b39aa39283111a361")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3c3a3900e30312f4fb3e943f96af1f594949aa3f")]
 [assembly: System.Reflection.AssemblyProductAttribute("Dawn of War Definitive Edition Hotkey Editor")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Dawn of War Definitive Edition Hotkey Editor")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

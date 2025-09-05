@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows;
 using Dawn_of_War_Definitive_Edition_Hotkey_Editor.Helpers;
 using Dawn_of_War_Definitive_Edition_Hotkey_Editor.Models;
@@ -68,6 +69,7 @@ namespace Dawn_of_War_Definitive_Edition_Hotkey_Editor.ViewModels
             EditBindingCommand = new RelayCommand(rowObj => EditBinding(rowObj as BindingRow), _ => !IsBaseFileLoaded);
 
             RefreshPresets();
+            SelectedSection = Sections.FirstOrDefault();
         }
 
         public void RefreshPresets()
@@ -127,7 +129,11 @@ namespace Dawn_of_War_Definitive_Edition_Hotkey_Editor.ViewModels
                     });
                 }
 
-            _allRows = rows.ToArray();
+            _allRows = rows
+                .OrderBy(r => r.Category, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(r => r.DisplayAction, StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+
             ApplyFilter();
             OnPropertyChanged(nameof(IsBaseFileLoaded));
             DeletePresetCommand.RaiseCanExecuteChanged();
@@ -136,22 +142,46 @@ namespace Dawn_of_War_Definitive_Edition_Hotkey_Editor.ViewModels
 
         private void ApplyFilter()
         {
-            var q = _allRows.AsEnumerable();
-            if (ShowConflictsOnly) q = q.Where(r => r.IsConflict);
-            if (SelectedSection != null && !string.IsNullOrEmpty(SelectedSection.Raw))
-                q = q.Where(r => r.CategoryRaw == SelectedSection.Raw);
-
             Rows.Clear();
-            foreach (var r in q) Rows.Add(r);
+
+            if (_allRows == null || _allRows.Length == 0)
+                return;
+
+            if (SelectedSection == null || string.IsNullOrEmpty(SelectedSection.Raw))
+                return;
+
+            var q = _allRows.AsEnumerable();
+
+            if (ShowConflictsOnly)
+                q = q.Where(r => r.IsConflict);
+
+            q = q.Where(r => r.CategoryRaw == SelectedSection.Raw);
+
+            foreach (var r in q)
+                Rows.Add(r);
         }
+
 
         private void CreatePreset()
         {
-            var newName = "My Profile";
-            var fullPath = PresetService.CreatePresetFromKeydefaults(newName);
+            if (SelectedPreset == null || !File.Exists(SelectedPreset.FullPath))
+            {
+                MessageBox.Show("Select a base profile first.", "No base selected",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            // Default new name based on current selection (e.g., "MyPreset Copy")
+            var baseName = Path.GetFileNameWithoutExtension(SelectedPreset.FileName);
+            var newName = $"{baseName} Copy";
+
+            var fullPath = PresetService.CreatePresetFromExisting(SelectedPreset.FullPath, newName);
+
             RefreshPresets();
-            SelectedPreset = Presets.FirstOrDefault(p => p.FullPath == fullPath) ?? Presets.FirstOrDefault();
+            SelectedPreset = Presets.FirstOrDefault(p => p.FullPath.Equals(fullPath, StringComparison.OrdinalIgnoreCase))
+                             ?? SelectedPreset;
         }
+
 
         private void DeletePreset()
         {
@@ -216,7 +246,7 @@ namespace Dawn_of_War_Definitive_Edition_Hotkey_Editor.ViewModels
                 result = result[(catRaw.Length + 1)..];
             else if (result.StartsWith("addon_" + catRaw + "_", System.StringComparison.OrdinalIgnoreCase))
                 result = result[("addon_" + catRaw + "_").Length..];
-            result = result.Replace('_', ' ');
+            result = Regex.Replace(result, "_+", " ").Trim();
             return result.Length == 0 ? result : char.ToUpper(result[0]) + (result.Length > 1 ? result[1..].ToLower() : "");
         }
 

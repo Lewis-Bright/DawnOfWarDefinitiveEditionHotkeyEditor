@@ -31,18 +31,23 @@ namespace Dawn_of_War_Definitive_Edition_Hotkey_Editor.Views
 
         private void CreatePreset_Click(object sender, RoutedEventArgs e)
         {
-            var dlg = new ProfileNameDialog(this, "New Preset", "Enter a file name (without extension):", "My Profile");
+            var basePreset = _vm.SelectedPreset;
+
+            var dlg = new ProfileNameDialog(this, "New Profile",
+                "Enter a profile name:",
+                "My Profile");
+
             if (dlg.ShowDialog() != true || string.IsNullOrWhiteSpace(dlg.Result))
                 return;
 
-            var desiredName = dlg.Result!;
             try
             {
-                var createdPath = PresetService.CreatePresetFromKeydefaults(desiredName);
+                var createdPath = PresetService.CreatePresetFromExisting(basePreset.FullPath, dlg.Result!);
 
                 _vm.RefreshPresets();
-                _vm.SelectedPreset = _vm.Presets.FirstOrDefault(p => p.FullPath == createdPath)
-                                     ?? _vm.Presets.FirstOrDefault();
+                _vm.SelectedPreset = _vm.Presets.FirstOrDefault(p =>
+                    p.FullPath.Equals(createdPath, StringComparison.OrdinalIgnoreCase))
+                    ?? _vm.Presets.FirstOrDefault();
             }
             catch (System.Exception ex)
             {
@@ -50,6 +55,7 @@ namespace Dawn_of_War_Definitive_Edition_Hotkey_Editor.Views
                                 MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+
 
     }
 }
