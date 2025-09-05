@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
 using Dawn_of_War_Definitive_Edition_Hotkey_Editor.Models;
 

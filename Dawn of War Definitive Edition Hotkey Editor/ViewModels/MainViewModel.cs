@@ -1,22 +1,21 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Windows;
+using Dawn_of_War_Definitive_Edition_Hotkey_Editor.Helpers;
 using Dawn_of_War_Definitive_Edition_Hotkey_Editor.Models;
 using Dawn_of_War_Definitive_Edition_Hotkey_Editor.Services;
-using Dawn_of_War_Definitive_Edition_Hotkey_Editor.Helpers;
 
 namespace Dawn_of_War_Definitive_Edition_Hotkey_Editor.ViewModels
 {
     public class MainViewModel : INotifyPropertyChanged
     {
-        public ObservableCollection<PresetItem> Presets { get; } = new();
-        public ObservableCollection<BindingRow> Rows { get; } = new();
-        public ObservableCollection<SectionItem> Sections { get; } = new()
-        {
+        public ObservableCollection<PresetItem> Presets { get; } = [];
+        public ObservableCollection<BindingRow> Rows { get; } = [];
+        public ObservableCollection<SectionItem> Sections { get; } =
+        [
             new() { Raw="marine", Display="Space Marine" },
             new() { Raw="chaos", Display="Chaos" },
             new() { Raw="tau", Display="Tau" },
@@ -27,7 +26,7 @@ namespace Dawn_of_War_Definitive_Edition_Hotkey_Editor.ViewModels
             new() { Raw="dark_eldar", Display="Dark Eldar" },
             new() { Raw="sisters", Display="Sisters of Battle" },
             new() { Raw="other", Display="Other" },
-        };
+        ];
 
         private PresetItem? _selectedPreset;
         public PresetItem? SelectedPreset
@@ -229,9 +228,9 @@ namespace Dawn_of_War_Definitive_Edition_Hotkey_Editor.ViewModels
             if (SelectedPreset != null)
             {
                 var current = SelectedPreset;
-                var tmp = current; 
-                LoadSelectedPreset();       
-                SelectedPreset = tmp; 
+                var tmp = current;
+                LoadSelectedPreset();
+                SelectedPreset = tmp;
             }
         }
 

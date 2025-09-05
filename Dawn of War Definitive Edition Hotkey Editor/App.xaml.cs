@@ -1,6 +1,4 @@
-﻿using System.Configuration;
-using System.Data;
-using System.Windows;
+﻿using System.Windows;
 
 namespace Dawn_of_War_Definitive_Edition_Hotkey_Editor
 {

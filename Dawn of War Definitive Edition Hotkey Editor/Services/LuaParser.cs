@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
 namespace Dawn_of_War_Definitive_Edition_Hotkey_Editor.Services

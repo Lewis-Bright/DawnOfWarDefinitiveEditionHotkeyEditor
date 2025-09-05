@@ -1,8 +1,8 @@
 using System.Windows;
-using Dawn_of_War_Definitive_Edition_Hotkey_Editor.ViewModels;
+using Dawn_of_War_Definitive_Edition_Hotkey_Editor.Dialogs;
 using Dawn_of_War_Definitive_Edition_Hotkey_Editor.Models;
 using Dawn_of_War_Definitive_Edition_Hotkey_Editor.Services;
-using Dawn_of_War_Definitive_Edition_Hotkey_Editor.Dialogs;
+using Dawn_of_War_Definitive_Edition_Hotkey_Editor.ViewModels;
 
 namespace Dawn_of_War_Definitive_Edition_Hotkey_Editor.Views
 {

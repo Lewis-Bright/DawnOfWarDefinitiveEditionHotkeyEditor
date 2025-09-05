@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.Linq;
 using System.Windows.Input;
 
 namespace Dawn_of_War_Definitive_Edition_Hotkey_Editor.Helpers

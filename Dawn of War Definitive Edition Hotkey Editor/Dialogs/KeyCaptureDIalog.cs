@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -16,7 +14,7 @@ namespace Dawn_of_War_Definitive_Edition_Hotkey_Editor.Dialogs
 
         public string? Result { get; private set; }
 
-        private static readonly string[] CaptureModOrder = new[] { "Control", "Alt", "Shift" };
+        private static readonly string[] CaptureModOrder = ["Control", "Alt", "Shift"];
 
         public KeyCaptureDialog(Window owner, string title, string initial = "")
         {
@@ -99,19 +97,19 @@ namespace Dawn_of_War_Definitive_Edition_Hotkey_Editor.Dialogs
             var token = KeyToToken(k);
             if (token != null && !IsModifierToken(token))
             {
-                _base = token;      // Enter, A, F1, etc.
+                _base = token;
                 _baseChosen = true;
             }
 
             UpdatePreview();
-            e.Handled = true;       // prevents default button behavior on Enter
+            e.Handled = true;
         }
 
         private void OnPreviewKeyUp(object? sender, KeyEventArgs e)
         {
             if (_baseChosen)
             {
-                e.Handled = true;   // lock base; don't let key-up clear it
+                e.Handled = true;
                 return;
             }
 
@@ -130,7 +128,7 @@ namespace Dawn_of_War_Definitive_Edition_Hotkey_Editor.Dialogs
             else
             {
                 _preview.Text = _mods.Count == 1 ? _mods.First() : "…";
-                _ok.IsEnabled = _mods.Count == 1; // allow pure modifier binding
+                _ok.IsEnabled = _mods.Count == 1;
             }
         }
 
@@ -140,7 +138,6 @@ namespace Dawn_of_War_Definitive_Edition_Hotkey_Editor.Dialogs
             return _base == null ? "" : (ordered.Any() ? string.Join("+", ordered.Append(_base)) : _base);
         }
 
-        // Accept "Control" as a modifier token (matches GetCurrentMods and Compose)
         private static bool IsModifierToken(string t) => t is "Control" or "Alt" or "Shift";
 
         private static string? KeyToToken(Key k)
