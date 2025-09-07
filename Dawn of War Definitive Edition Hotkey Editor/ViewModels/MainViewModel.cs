@@ -5,6 +5,8 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows;
+using System.Windows;
+using System.Windows.Input;
 using Dawn_of_War_Definitive_Edition_Hotkey_Editor.Helpers;
 using Dawn_of_War_Definitive_Edition_Hotkey_Editor.Models;
 using Dawn_of_War_Definitive_Edition_Hotkey_Editor.Services;
@@ -13,6 +15,49 @@ namespace Dawn_of_War_Definitive_Edition_Hotkey_Editor.ViewModels
 {
     public class MainViewModel : INotifyPropertyChanged
     {
+
+        private bool _searchMode;
+        public bool SearchMode
+        {
+            get => _searchMode;
+            set { _searchMode = value; OnPropertyChanged(); OnPropertyChanged(nameof(LeftColumnWidth)); ApplyFilter(); }
+        }
+
+        private string _searchQuery = "";
+        public string SearchQuery
+        {
+            get => _searchQuery;
+            set
+            {
+                _searchQuery = value;
+                OnPropertyChanged();
+                if (ClearSearchCommand is RelayCommand rc) rc.RaiseCanExecuteChanged();
+            }
+        }
+
+        public GridLength LeftColumnWidth => SearchMode ? new GridLength(0) : new GridLength(200);
+
+        public void SubmitSearch()
+        {
+            SearchMode = !string.IsNullOrWhiteSpace(SearchQuery);
+            ApplyFilter();
+        }
+
+        public void ClearSearch()
+        {
+            SearchMode = false;
+            SearchQuery = "";
+            ApplyFilter();
+        }
+
+        public IReadOnlyList<ActionNameIndex> BeautifiedList { get; private set; } = Array.Empty<ActionNameIndex>();
+
+        public IReadOnlyDictionary<string, IReadOnlyDictionary<string, List<ActionNameIndex>>> DisplayToRawByCategory { get; private set; }
+            = new Dictionary<string, IReadOnlyDictionary<string, List<ActionNameIndex>>>(StringComparer.OrdinalIgnoreCase);
+
+        public IReadOnlyDictionary<(string Table, string Action), DisplayInfo> RawToDisplay { get; private set; }
+            = new Dictionary<(string, string), DisplayInfo>();
+
         public ObservableCollection<PresetItem> Presets { get; } = [];
         public ObservableCollection<BindingRow> Rows { get; } = [];
         public ObservableCollection<SectionItem> Sections { get; } =
@@ -62,6 +107,9 @@ namespace Dawn_of_War_Definitive_Edition_Hotkey_Editor.ViewModels
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
+        public ICommand SubmitSearchCommand { get; }
+        public ICommand ClearSearchCommand { get; }
+
         public MainViewModel()
         {
             CreatePresetCommand = new RelayCommand(_ => CreatePreset());
@@ -70,6 +118,8 @@ namespace Dawn_of_War_Definitive_Edition_Hotkey_Editor.ViewModels
 
             RefreshPresets();
             SelectedSection = Sections.FirstOrDefault();
+            SubmitSearchCommand = new RelayCommand(_ => SubmitSearch());
+            ClearSearchCommand = new RelayCommand(_ => ClearSearch(), _ => !string.IsNullOrWhiteSpace(SearchQuery));
         }
 
         public void RefreshPresets()
@@ -130,35 +180,78 @@ namespace Dawn_of_War_Definitive_Edition_Hotkey_Editor.ViewModels
                 }
 
             _allRows = rows
-                .OrderBy(r => r.Category, StringComparer.OrdinalIgnoreCase)
-                .ThenBy(r => r.DisplayAction, StringComparer.OrdinalIgnoreCase)
+                .OrderBy(r => r.DisplayAction, StringComparer.OrdinalIgnoreCase)
                 .ToArray();
 
             ApplyFilter();
             OnPropertyChanged(nameof(IsBaseFileLoaded));
             DeletePresetCommand.RaiseCanExecuteChanged();
             EditBindingCommand.RaiseCanExecuteChanged();
+
+            BeautifiedList = _allRows
+                .Select(r => new ActionNameIndex
+                {
+                    Display = r.DisplayAction,
+                    Action = r.Action,
+                    Table = r.Table,
+                    Category = r.Category,
+                    CategoryRaw = r.CategoryRaw
+                })
+                .OrderBy(x => x.Category, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(x => x.Display, StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+
+            DisplayToRawByCategory = BeautifiedList
+                .GroupBy(x => x.CategoryRaw, StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(
+                    g => g.Key,
+                    g => (IReadOnlyDictionary<string, List<ActionNameIndex>>)g
+                            .GroupBy(x => x.Display, StringComparer.OrdinalIgnoreCase)
+                            .ToDictionary(
+                                gg => gg.Key,
+                                gg => gg.ToList(),
+                                StringComparer.OrdinalIgnoreCase),
+                    StringComparer.OrdinalIgnoreCase);
+
+            RawToDisplay = _allRows
+                .ToDictionary(
+                    r => (r.Table, r.Action),
+                    r => new DisplayInfo
+                    {
+                        Display = r.DisplayAction,
+                        Category = r.Category,
+                        CategoryRaw = r.CategoryRaw
+                    },
+                    new TableActionComparer());
+
+            OnPropertyChanged(nameof(BeautifiedList));
+            OnPropertyChanged(nameof(DisplayToRawByCategory));
+            OnPropertyChanged(nameof(RawToDisplay));
         }
 
         private void ApplyFilter()
         {
             Rows.Clear();
-
-            if (_allRows == null || _allRows.Length == 0)
-                return;
-
-            if (SelectedSection == null || string.IsNullOrEmpty(SelectedSection.Raw))
-                return;
+            if (_allRows == null || _allRows.Length == 0) return;
 
             var q = _allRows.AsEnumerable();
 
-            if (ShowConflictsOnly)
-                q = q.Where(r => r.IsConflict);
+            if (!string.IsNullOrWhiteSpace(SearchQuery))
+            {
+                q = q.Where(r =>
+                    r.DisplayAction.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase) ||
+                    (r.Binding?.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                    r.Category.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase));
+            }
+            else if (!SearchMode) // normal mode: filter by selected category
+            {
+                if (SelectedSection == null || string.IsNullOrEmpty(SelectedSection.Raw)) return;
+                q = q.Where(r => r.CategoryRaw == SelectedSection.Raw);
+            }
 
-            q = q.Where(r => r.CategoryRaw == SelectedSection.Raw);
+            if (ShowConflictsOnly) q = q.Where(r => r.IsConflict);
 
-            foreach (var r in q)
-                Rows.Add(r);
+            foreach (var r in q) Rows.Add(r);
         }
 
 
@@ -188,13 +281,20 @@ namespace Dawn_of_War_Definitive_Edition_Hotkey_Editor.ViewModels
             if (SelectedPreset == null) return;
             if (SelectedPreset.IsProtected) return;
 
-            var res = MessageBox.Show($"Delete “{SelectedPreset.FileName}” permanently?",
-                "Confirm delete", MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No);
+            var msg =
+                $"Delete “{SelectedPreset.FileName}” permanently?" + Environment.NewLine + Environment.NewLine +
+                "Warning: If Steam Cloud is enabled for Dawn of War, Steam may recreate this file when the game starts. " +
+                "The file will be cleared but may still exist on the file system after running the game.";
+
+            var res = MessageBox.Show(msg, "Confirm delete",
+                MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No);
+
             if (res != MessageBoxResult.Yes) return;
 
             PresetService.DeletePreset(SelectedPreset.FullPath);
             RefreshPresets();
         }
+
 
         private void EditBinding(BindingRow? row)
         {

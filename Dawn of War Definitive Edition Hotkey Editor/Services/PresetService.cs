@@ -35,6 +35,7 @@ namespace Dawn_of_War_Definitive_Edition_Hotkey_Editor.Services
 
             foreach (var f in files)
             {
+                if (IsPresetEmpty(f)) continue;
                 var file = Path.GetFileName(f);
                 var display = Path.GetFileNameWithoutExtension(f);
                 bool isBase = file.Equals("KEYDEFAULTS.LUA", StringComparison.OrdinalIgnoreCase);
@@ -57,23 +58,74 @@ namespace Dawn_of_War_Definitive_Edition_Hotkey_Editor.Services
             if (!File.Exists(baseFullPath))
                 throw new FileNotFoundException("Base profile not found.", baseFullPath);
 
-            // Sanitize and ensure unique file name
             var safe = new string(desiredNameNoExt.Trim()
                 .Select(ch => char.IsLetterOrDigit(ch) || ch == '_' || ch == '-' ? ch : '_')
                 .ToArray());
 
-            var path = Path.Combine(dir, safe + ".lua");
-            int i = 2;
-            while (File.Exists(path))
-                path = Path.Combine(dir, $"{safe}_{i++}.lua");
+            var target = Path.Combine(dir, safe + ".lua");
 
-            File.Copy(baseFullPath, path, overwrite: false);
+            if (File.Exists(target))
+            {
+                if (IsProtected(Path.GetFileName(target)))
+                {
+                    target = GetUniquePath(dir, safe);
+                }
+                else if (IsPresetEmpty(target))
+                {
+                    File.SetAttributes(target, FileAttributes.Normal);
+                    File.Copy(baseFullPath, target, overwrite: true);
+                    LuaWriter.SetBindingsLocstring(target, Path.GetFileNameWithoutExtension(target));
+                    return target;
+                }
+                else
+                {
+                    target = GetUniquePath(dir, safe);
+                }
+            }
+            else
+            {
+                File.Copy(baseFullPath, target, overwrite: false);
+            }
 
-            // Update the locstring so the new file displays correctly
-            LuaWriter.SetBindingsLocstring(path, Path.GetFileNameWithoutExtension(path));
-            return path;
+            LuaWriter.SetBindingsLocstring(target, Path.GetFileNameWithoutExtension(target));
+            return target;
         }
 
-        public static void DeletePreset(string fullPath) => File.Delete(fullPath);
+
+        public static void DeletePreset(string fullPath)
+        {
+            if (!File.Exists(fullPath)) return;
+
+            File.SetAttributes(fullPath, FileAttributes.Normal);
+
+            using var fs = new FileStream(fullPath, FileMode.Open, FileAccess.Write, FileShare.None);
+            fs.SetLength(0);
+            fs.Flush(true);
+        }
+
+        private static bool IsPresetEmpty(string path)
+        {
+            try
+            {
+                var text = File.ReadAllText(path, Encoding.UTF8);
+                if (string.IsNullOrWhiteSpace(text)) return true;
+
+                var tables = LuaParser.Parse(text);
+                var totalPairs = tables.Sum(kv => kv.Value.Count);
+                return totalPairs == 0;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private static string GetUniquePath(string dir, string baseNameNoExt)
+        {
+            var i = 2;
+            var path = Path.Combine(dir, baseNameNoExt + ".lua");
+            while (File.Exists(path)) path = Path.Combine(dir, $"{baseNameNoExt}_{i++}.lua");
+            return path;
+        }
     }
 }

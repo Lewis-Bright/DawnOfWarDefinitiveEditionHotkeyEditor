@@ -1,8 +1,11 @@
 using System.Windows;
+using System.Windows.Input;
 using Dawn_of_War_Definitive_Edition_Hotkey_Editor.Dialogs;
 using Dawn_of_War_Definitive_Edition_Hotkey_Editor.Models;
 using Dawn_of_War_Definitive_Edition_Hotkey_Editor.Services;
 using Dawn_of_War_Definitive_Edition_Hotkey_Editor.ViewModels;
+using System.Linq;
+
 
 namespace Dawn_of_War_Definitive_Edition_Hotkey_Editor.Views
 {
@@ -32,30 +35,30 @@ namespace Dawn_of_War_Definitive_Edition_Hotkey_Editor.Views
         private void CreatePreset_Click(object sender, RoutedEventArgs e)
         {
             var basePreset = _vm.SelectedPreset;
-
-            var dlg = new ProfileNameDialog(this, "New Profile",
-                "Enter a profile name:",
-                "My Profile");
-
-            if (dlg.ShowDialog() != true || string.IsNullOrWhiteSpace(dlg.Result))
+            if (basePreset == null)
+            {
+                MessageBox.Show(this, "Select a profile to copy from first.", "No base selected",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
+            }
+
+            var dlg = new ProfileNameDialog(this, "New Profile", "Enter a profile name:", "My Profile");
+            if (dlg.ShowDialog() != true || string.IsNullOrWhiteSpace(dlg.Result)) return;
 
             try
             {
-                var createdPath = PresetService.CreatePresetFromExisting(basePreset.FullPath, dlg.Result!);
-
+                var createdPath = PresetService.CreatePresetFromExisting(basePreset.FullPath, dlg.Result!.Trim());
                 _vm.RefreshPresets();
                 _vm.SelectedPreset = _vm.Presets.FirstOrDefault(p =>
                     p.FullPath.Equals(createdPath, StringComparison.OrdinalIgnoreCase))
                     ?? _vm.Presets.FirstOrDefault();
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 MessageBox.Show(this, $"Failed to create preset:\n{ex.Message}", "Error",
                                 MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-
 
     }
 }

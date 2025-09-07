@@ -3,40 +3,156 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
         mc:Ignorable="d"
-        Title="DOW: Hotkey Editor" Height="600" Width="900">
+        Title="DOW: Hotkey Editor" Height="600" Width="900" MinWidth="900" MinHeight="200">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <Style x:Key="NoGripNoOverflowToolBar" TargetType="{x:Type ToolBar}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ToolBar}">
+                        <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+                            <ToolBarPanel IsItemsHost="True"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="SearchTextBox"
+           TargetType="TextBox"
+           BasedOn="{StaticResource {x:Static ToolBar.TextBoxStyleKey}}">
+            <Setter Property="Width" Value="240"/>
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Grid>
+                            <!-- leave room on the right for the clear “×” button -->
+                            <ScrollViewer x:Name="PART_ContentHost" Margin="0,0,28,0"/>
+
+                            <!-- watermark -->
+                            <TextBlock Text="{TemplateBinding Tag}"
+                     Foreground="Gray"
+                     Margin="4,0,28,0"
+                     VerticalAlignment="Center"
+                     IsHitTestVisible="False">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Text, RelativeSource={RelativeSource TemplatedParent}}" Value="">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+
+                            <!-- clear “×” button -->
+                            <Button Content="×"
+                              Width="20" Height="20"
+                              HorizontalAlignment="Right"
+                              VerticalAlignment="Center"
+                              Margin="0,0,4,0"
+                              Command="{Binding DataContext.ClearSearchCommand,
+                                RelativeSource={RelativeSource AncestorType=Window}}">
+                                <Button.Style>
+                                    <Style TargetType="Button">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                        <Style.Triggers>
+                                            <!-- hide when empty -->
+                                            <DataTrigger Binding="{Binding Text.Length, RelativeSource={RelativeSource TemplatedParent}}">
+                                                <DataTrigger.Value>
+                                                    <sys:Int32>0</sys:Int32>
+                                                </DataTrigger.Value>
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
     <DockPanel>
-        <ToolBar DockPanel.Dock="Top" Padding="4">
-            <TextBlock Text="Profile:" VerticalAlignment="Center" Margin="0,0,6,0"/>
-            <ComboBox Width="320"
-                ItemsSource="{Binding Presets}"
-                SelectedItem="{Binding SelectedPreset}"
-                DisplayMemberPath="Name"/>
-            <Button
-                Content="New profile"
-                Width="140" Height="28"
-                Margin="8,0,0,0"
-                Click="CreatePreset_Click" />
-            <Button Content="Delete" Width="50" Height="28" Margin="6,0,0,0"
-              Command="{Binding DeletePresetCommand}"/>
-        </ToolBar>
+        <DockPanel DockPanel.Dock="Top" LastChildFill="False">
+            <ToolBar DockPanel.Dock="Top" Padding="4" Style="{StaticResource NoGripNoOverflowToolBar}">
+                <ToolBar.Resources>
+                    <Style TargetType="{x:Type FrameworkElement}">
+                        <Setter Property="ToolBar.OverflowMode" Value="Never"/>
+                    </Style>
+                </ToolBar.Resources>
+
+                <TextBlock Text="Profile" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                <ComboBox Width="320"
+                    ItemsSource="{Binding Presets}"
+                    SelectedItem="{Binding SelectedPreset}"
+                    DisplayMemberPath="Name"/>
+                <Button Content="Make new profile" Width="140" Height="28" Margin="8,0,0,0"
+                     Click="CreatePreset_Click"/>
+                <Button Content="Delete" Width="50" Height="28" Margin="6,0,0,0"
+                     Command="{Binding DeletePresetCommand}"/>
+
+                <Border Width="40"/>
+
+                <TextBox Style="{StaticResource SearchTextBox}"
+                 Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}"
+                 Tag="search..."
+                 ToolBar.OverflowMode="Never">
+                    <TextBox.InputBindings>
+                        <KeyBinding Key="Enter" Command="{Binding SubmitSearchCommand}"/>
+                        <KeyBinding Key="Escape" Command="{Binding ClearSearchCommand}"/>
+                    </TextBox.InputBindings>
+                </TextBox>
+
+            </ToolBar>
+        </DockPanel>
+
 
         <Grid>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="200"/>
+                <ColumnDefinition Width="{Binding DataContext.LeftColumnWidth,
+                                      RelativeSource={RelativeSource AncestorType=Grid}}"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
             <ListBox Grid.Column="0"
-               ItemsSource="{Binding Sections}"
-               SelectedItem="{Binding SelectedSection}"
-               DisplayMemberPath="Display"/>
+             ItemsSource="{Binding Sections}"
+             SelectedItem="{Binding SelectedSection}"
+             DisplayMemberPath="Display">
+                <ListBox.Style>
+                    <Style TargetType="ListBox">
+                        <Setter Property="Visibility" Value="Visible"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding SearchMode}" Value="True">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </ListBox.Style>
+            </ListBox>
 
             <DataGrid x:Name="KeysGrid" Grid.Column="1"
                 ItemsSource="{Binding Rows}"
                 AutoGenerateColumns="False" IsReadOnly="True" Margin="6">
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="Action" Binding="{Binding DisplayAction}" Width="*"/>
+                    <DataGridTextColumn Header="Category"
+                        Binding="{Binding Category}"
+                        Width="160"
+                        IsReadOnly="True"
+                        Visibility="{Binding DataContext.SearchMode,
+                                             ElementName=KeysGrid,
+                                             Converter={StaticResource BoolToVis}}"/>
+
+                    <DataGridTextColumn Header="Action"
+                        Binding="{Binding DisplayAction}"
+                        Width="*"
+                        IsReadOnly="True"/>
                     <DataGridTemplateColumn Header="Binding" Width="220">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
@@ -47,9 +163,9 @@
                                     </Grid.ColumnDefinitions>
                                     <TextBlock Text="{Binding Binding}" VerticalAlignment="Center" Margin="6,0,6,0" Grid.Column="0"/>
                                     <Button x:Name="EditButton"
-                          Content="✎"
-                          Width="28" Height="24" Padding="0" Margin="0,0,4,0" Grid.Column="1"
-                          Click="EditBinding_Click">
+                                      Content="✎"
+                                      Width="28" Height="24" Padding="0" Margin="0,0,4,0" Grid.Column="1"
+                                      Click="EditBinding_Click">
                                         <Button.Style>
                                             <Style TargetType="Button">
                                                 <Setter Property="Visibility" Value="Visible"/>
