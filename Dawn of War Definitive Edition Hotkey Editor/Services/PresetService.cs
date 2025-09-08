@@ -6,8 +6,23 @@ namespace Dawn_of_War_Definitive_Edition_Hotkey_Editor.Services
 {
     public static class PresetService
     {
+        private static string? _profileDirOverride;
+        public static void SetProfileDirectory(string dir)
+        {
+            if (string.IsNullOrWhiteSpace(dir) || !Directory.Exists(dir))
+                throw new DirectoryNotFoundException(dir);
+
+            // (optional) sanity check: require playercfg.lua to exist
+            var cfg = Path.Combine(dir, "playercfg.lua");
+            if (!File.Exists(cfg))
+                throw new InvalidOperationException("Selected folder doesn't look like a Dawn of War profile (missing playercfg.lua).");
+
+            _profileDirOverride = dir;
+        }
         public static string GetProfile1Path()
         {
+            if (!string.IsNullOrEmpty(_profileDirOverride)) return _profileDirOverride;
+
             var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             return Path.Combine(appData, "Relic Entertainment", "Dawn of War", "Profiles", "Profile1");
         }

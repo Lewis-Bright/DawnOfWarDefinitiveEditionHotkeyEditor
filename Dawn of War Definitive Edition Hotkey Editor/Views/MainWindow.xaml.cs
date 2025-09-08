@@ -1,21 +1,32 @@
+using System.IO;
+using System.Linq;
 using System.Windows;
+using WinForms = System.Windows.Forms;
 using System.Windows.Input;
 using Dawn_of_War_Definitive_Edition_Hotkey_Editor.Dialogs;
 using Dawn_of_War_Definitive_Edition_Hotkey_Editor.Models;
 using Dawn_of_War_Definitive_Edition_Hotkey_Editor.Services;
 using Dawn_of_War_Definitive_Edition_Hotkey_Editor.ViewModels;
-using System.Linq;
 
 
 namespace Dawn_of_War_Definitive_Edition_Hotkey_Editor.Views
 {
     public partial class MainWindow : Window
     {
-        private readonly MainViewModel _vm = new();
+        private readonly MainViewModel _vm;
 
         public MainWindow()
         {
             InitializeComponent();
+            DataContext = _vm;
+
+            var saved = Properties.Settings.Default.ProfilePath;
+            if (!string.IsNullOrWhiteSpace(saved) && Directory.Exists(saved))
+            {
+                try { PresetService.SetProfileDirectory(saved); } catch { /* ignore invalid saved path */ }
+            }
+
+            _vm = new MainViewModel();
             DataContext = _vm;
         }
 
@@ -60,5 +71,38 @@ namespace Dawn_of_War_Definitive_Edition_Hotkey_Editor.Views
             }
         }
 
+        private void SelectProfileFolder_Click(object sender, RoutedEventArgs e)
+        {
+            using var dlg = new System.Windows.Forms.FolderBrowserDialog
+            {
+                Description = "Choose your Dawn of War profile folder (e.g. ...\\Relic Entertainment\\Dawn of War\\Profiles\\Profile1)",
+                UseDescriptionForTitle = true,
+                ShowNewFolderButton = false
+            };
+
+            if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK &&
+                !string.IsNullOrWhiteSpace(dlg.SelectedPath))
+            {
+                try
+                {
+                    PresetService.SetProfileDirectory(dlg.SelectedPath);
+
+                    Properties.Settings.Default.ProfilePath = dlg.SelectedPath;
+                    Properties.Settings.Default.Save();
+
+                    _vm.RefreshPresets();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(this, $"Invalid folder:\n{ex.Message}", "Error",
+                                    MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        private void Exit_Click(object sender, RoutedEventArgs e)
+        {
+            Close();
+        }
     }
 }

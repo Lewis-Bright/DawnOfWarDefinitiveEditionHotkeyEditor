@@ -5,7 +5,6 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows;
-using System.Windows;
 using System.Windows.Input;
 using Dawn_of_War_Definitive_Edition_Hotkey_Editor.Helpers;
 using Dawn_of_War_Definitive_Edition_Hotkey_Editor.Models;

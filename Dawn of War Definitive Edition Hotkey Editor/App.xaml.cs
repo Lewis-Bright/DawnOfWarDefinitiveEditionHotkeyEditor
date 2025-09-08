@@ -5,7 +5,7 @@ namespace Dawn_of_War_Definitive_Edition_Hotkey_Editor
     /// <summary>
     /// Interaction logic for App.xaml
     /// </summary>
-    public partial class App : Application
+    public partial class App : System.Windows.Application
     {
     }
 

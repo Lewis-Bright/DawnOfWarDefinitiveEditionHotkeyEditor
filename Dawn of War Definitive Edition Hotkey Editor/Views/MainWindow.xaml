@@ -4,10 +4,12 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
+		xmlns:helpers="clr-namespace:Dawn_of_War_Definitive_Edition_Hotkey_Editor.Helpers"
         mc:Ignorable="d"
         Title="DOW: Hotkey Editor" Height="600" Width="900" MinWidth="900" MinHeight="200">
     <Window.Resources>
-        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+		<helpers:BindingProxy x:Key="VmProxy" Data="{Binding}"/>
+		<BooleanToVisibilityConverter x:Key="BoolToVis"/>
         <Style x:Key="NoGripNoOverflowToolBar" TargetType="{x:Type ToolBar}">
             <Setter Property="Template">
                 <Setter.Value>
@@ -80,6 +82,13 @@
         </Style>
     </Window.Resources>
     <DockPanel>
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="_File">
+                <MenuItem Header="Select _Profile Folder..." Click="SelectProfileFolder_Click"/>
+                <Separator/>
+                <MenuItem Header="E_xit" Click="Exit_Click"/>
+            </MenuItem>
+        </Menu>
         <DockPanel DockPanel.Dock="Top" LastChildFill="False">
             <ToolBar DockPanel.Dock="Top" Padding="4" Style="{StaticResource NoGripNoOverflowToolBar}">
                 <ToolBar.Resources>
@@ -141,15 +150,15 @@
                 ItemsSource="{Binding Rows}"
                 AutoGenerateColumns="False" IsReadOnly="True" Margin="6">
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="Category"
-                        Binding="{Binding Category}"
-                        Width="160"
-                        IsReadOnly="True"
-                        Visibility="{Binding DataContext.SearchMode,
-                                             ElementName=KeysGrid,
-                                             Converter={StaticResource BoolToVis}}"/>
+					<DataGridTextColumn Header="Category"
+										Binding="{Binding Category}"
+										Width="160"
+										IsReadOnly="True"
+										Visibility="{Binding Data.SearchMode,
+                                         Source={StaticResource VmProxy},
+                                         Converter={StaticResource BoolToVis}}"/>
 
-                    <DataGridTextColumn Header="Action"
+					<DataGridTextColumn Header="Action"
                         Binding="{Binding DisplayAction}"
                         Width="*"
                         IsReadOnly="True"/>
