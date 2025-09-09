@@ -18,12 +18,12 @@ namespace Dawn_of_War_Definitive_Edition_Hotkey_Editor.Views
         public MainWindow()
         {
             InitializeComponent();
-            DataContext = _vm;
 
-            var saved = Properties.Settings.Default.ProfilePath;
-            if (!string.IsNullOrWhiteSpace(saved) && Directory.Exists(saved))
+            AppStorage.Load();
+            if (!string.IsNullOrWhiteSpace(AppStorage.ProfilePath) &&
+                Directory.Exists(AppStorage.ProfilePath))
             {
-                try { PresetService.SetProfileDirectory(saved); } catch { /* ignore invalid saved path */ }
+                try { PresetService.SetProfileDirectory(AppStorage.ProfilePath); } catch { }
             }
 
             _vm = new MainViewModel();
@@ -73,30 +73,36 @@ namespace Dawn_of_War_Definitive_Edition_Hotkey_Editor.Views
 
         private void SelectProfileFolder_Click(object sender, RoutedEventArgs e)
         {
-            using var dlg = new System.Windows.Forms.FolderBrowserDialog
+            try
             {
-                Description = "Choose your Dawn of War profile folder (e.g. ...\\Relic Entertainment\\Dawn of War\\Profiles\\Profile1)",
-                UseDescriptionForTitle = true,
-                ShowNewFolderButton = false
-            };
+                using var dlg = new WinForms.FolderBrowserDialog
+                {
+                    Description = "Choose your Dawn of War profile folder (…\\Relic Entertainment\\Dawn of War\\Profiles\\Profile1)",
+                    ShowNewFolderButton = false
+                };
 
-            if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK &&
-                !string.IsNullOrWhiteSpace(dlg.SelectedPath))
+                var r = dlg.ShowDialog();
+                if (r != WinForms.DialogResult.OK) return;
+
+                var path = dlg.SelectedPath;
+
+                if (string.IsNullOrWhiteSpace(path) || !Directory.Exists(path))
+                    throw new DirectoryNotFoundException("Folder not found.");
+
+                var cfg = Path.Combine(path, "playercfg.lua");
+                if (!File.Exists(cfg))
+                    throw new InvalidOperationException("This doesn't look like a Dawn of War profile (missing playercfg.lua).");
+
+                PresetService.SetProfileDirectory(path);
+                AppStorage.ProfilePath = path;
+                AppStorage.Save();
+
+                _vm.RefreshPresets();
+            }
+            catch (Exception ex)
             {
-                try
-                {
-                    PresetService.SetProfileDirectory(dlg.SelectedPath);
-
-                    Properties.Settings.Default.ProfilePath = dlg.SelectedPath;
-                    Properties.Settings.Default.Save();
-
-                    _vm.RefreshPresets();
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show(this, $"Invalid folder:\n{ex.Message}", "Error",
-                                    MessageBoxButton.OK, MessageBoxImage.Error);
-                }
+                MessageBox.Show(this, $"Can't use that folder:\n{ex.Message}",
+                                "Invalid profile folder", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
