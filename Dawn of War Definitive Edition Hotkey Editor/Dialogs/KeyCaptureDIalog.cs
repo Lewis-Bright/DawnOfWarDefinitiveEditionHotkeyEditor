@@ -3,7 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using WpfColors = System.Windows.SystemColors;
 using Dawn_of_War_Definitive_Edition_Hotkey_Editor.Input;
-
+using Dawn_of_War_Definitive_Edition_Hotkey_Editor.Models;
 
 namespace Dawn_of_War_Definitive_Edition_Hotkey_Editor.Dialogs
 {
@@ -19,24 +19,16 @@ namespace Dawn_of_War_Definitive_Edition_Hotkey_Editor.Dialogs
         private readonly TextBlock _secondaryPreview;
         private readonly Button _ok;
         private readonly Button _clear;
-        private bool _explicitEmpty;
 
-        private HashSet<string> _modsPrimary = new(System.StringComparer.OrdinalIgnoreCase);
-        private HashSet<string> _modsSecondary = new(System.StringComparer.OrdinalIgnoreCase);
-        private string? _basePrimary;
-        private string? _baseSecondary;
-        private bool _baseChosenPrimary;
-        private bool _baseChosenSecondary;
-        private bool _modOnlyHoldPrimary;
-        private bool _modOnlyHoldSecondary;
-        private string? _committedPrimary;
-        private string? _committedSecondary;
+        private bool _explicitEmpty;
         private ActivePanel _active = ActivePanel.Primary;
         private readonly bool _secondaryAllowedForThisBinding;
 
+        private readonly CaptureState _primary = new();
+        private readonly CaptureState _secondary = new();
+
         public string? PrimaryResult { get; private set; }
         public string? SecondaryResult { get; private set; }
-
 
         private static Border MakeCaptureCard(string title, Thickness margin, out TextBlock label, out TextBlock preview)
         {
@@ -49,18 +41,16 @@ namespace Dawn_of_War_Definitive_Edition_Hotkey_Editor.Dialogs
             card.Child = stack;
             return card;
         }
-        private static bool IsModifierKey(Key k) =>
-             k is Key.LeftShift or Key.RightShift or Key.LeftCtrl or Key.RightCtrl or Key.LeftAlt or Key.RightAlt;
-
 
         public KeyCaptureDialog(Window owner, string title, string initial, bool secondaryAllowed)
         {
             Title = title;
             Owner = owner;
             WindowStartupLocation = WindowStartupLocation.CenterOwner;
-            Width = 640;
+            MinWidth = 320;
+            Width = 320;
             SizeToContent = SizeToContent.Height;
-            ResizeMode = ResizeMode.NoResize;
+            ResizeMode = ResizeMode.CanResize;
 
             _secondaryAllowedForThisBinding = secondaryAllowed;
 
@@ -113,30 +103,25 @@ namespace Dawn_of_War_Definitive_Edition_Hotkey_Editor.Dialogs
                     UpdateActiveVisuals();
                 }
             };
+
             _clear.Click += (_, __) =>
             {
                 if (_active == ActivePanel.Primary)
                 {
-                    _modsPrimary.Clear(); _modsSecondary.Clear();
-                    _basePrimary = null; _baseSecondary = null;
-                    _baseChosenPrimary = false; _baseChosenSecondary = false;
-                    _committedPrimary = null; _committedSecondary = null;
-                    PrimaryResult = ""; SecondaryResult = null;
+                    _primary.ResetAll();
+                    _secondary.ResetAll();
+                    PrimaryResult = "";
+                    SecondaryResult = null;
                     _explicitEmpty = true;
-                    UpdateAll();
                 }
                 else
                 {
-                    _modsSecondary.Clear();
-                    _baseSecondary = null;
-                    _baseChosenSecondary = false;
-                    _committedSecondary = null;
+                    _secondary.ResetAll();
                     SecondaryResult = null;
                     _explicitEmpty = false;
-                    UpdateAll();
                 }
+                UpdateAll();
             };
-
 
             _ok.Click += (_, __) =>
             {
@@ -148,14 +133,12 @@ namespace Dawn_of_War_Definitive_Edition_Hotkey_Editor.Dialogs
                     return;
                 }
 
-                var p = _committedPrimary ?? CurrentBindingOrNullPrimary();
-                var s = _committedSecondary ?? CurrentBindingOrNullSecondary();
+                var p = _primary.Committed ?? _primary.LiveBindingOrNull();
+                var s = _secondary.Committed ?? _secondary.LiveBindingOrNull();
                 if (p != null) PrimaryResult = p;
                 if (_secondaryAllowedForThisBinding && s != null) SecondaryResult = s;
                 DialogResult = true;
             };
-
-
 
             Loaded += (_, __) =>
             {
@@ -169,13 +152,12 @@ namespace Dawn_of_War_Definitive_Edition_Hotkey_Editor.Dialogs
                                        .Where(x => !string.IsNullOrEmpty(x))
                                        .ToArray();
 
-                    if (parts.Length > 0) SetInitialPrimary(parts[0]);
-                    if (_secondaryAllowedForThisBinding && parts.Length > 1) SetInitialSecondary(parts[1]);
+                    if (parts.Length > 0) _primary.SetInitial(parts[0]);
+                    if (_secondaryAllowedForThisBinding && parts.Length > 1) _secondary.SetInitial(parts[1]);
                 }
 
                 UpdateAll();
             };
-
         }
 
         private void ApplySecondaryVisibility(Grid cardsGrid)
@@ -219,41 +201,12 @@ namespace Dawn_of_War_Definitive_Edition_Hotkey_Editor.Dialogs
 
             if (_active == ActivePanel.Primary)
             {
-                if (IsModifierKey(k))
-                {
-                    _modOnlyHoldPrimary = true;
-                }
-                else
-                {
-                    _modsPrimary = HotkeyCodec.GetCurrentMods();
-                    if (HotkeyCodec.TryGetToken(k, out var token) && token is { } t)
-                    {
-                        _basePrimary = t;
-                        _baseChosenPrimary = true;
-                        _modOnlyHoldPrimary = false;
-                        _committedPrimary = HotkeyCodec.Compose(_modsPrimary, _basePrimary);
-                    }
-                }
+                _primary.HandleKeyDown(k);
             }
             else
             {
                 if (!SecondaryEditable()) { e.Handled = true; return; }
-
-                if (IsModifierKey(k))
-                {
-                    _modOnlyHoldSecondary = true;
-                }
-                else
-                {
-                    _modsSecondary = HotkeyCodec.GetCurrentMods();
-                    if (HotkeyCodec.TryGetToken(k, out var token) && token is { } t)
-                    {
-                        _baseSecondary = t;
-                        _baseChosenSecondary = true;
-                        _modOnlyHoldSecondary = false;
-                        _committedSecondary = HotkeyCodec.Compose(_modsSecondary, _baseSecondary);
-                    }
-                }
+                _secondary.HandleKeyDown(k);
             }
 
             UpdateAll();
@@ -264,14 +217,12 @@ namespace Dawn_of_War_Definitive_Edition_Hotkey_Editor.Dialogs
         {
             if (_active == ActivePanel.Primary)
             {
-                _modsPrimary = HotkeyCodec.GetCurrentMods();
-                if (_modsPrimary.Count == 0) _modOnlyHoldPrimary = false;
+                _primary.HandleKeyUp();
             }
             else
             {
                 if (!SecondaryEditable()) { e.Handled = true; return; }
-                _modsSecondary = HotkeyCodec.GetCurrentMods();
-                if (_modsSecondary.Count == 0) _modOnlyHoldSecondary = false;
+                _secondary.HandleKeyUp();
             }
 
             UpdateAll();
@@ -280,9 +231,6 @@ namespace Dawn_of_War_Definitive_Edition_Hotkey_Editor.Dialogs
 
         private void UpdateAll()
         {
-            var pLive = CurrentBindingOrNullPrimary();
-            var sLive = CurrentBindingOrNullSecondary();
-
             if (_explicitEmpty)
             {
                 _primaryPreview.Text = "…";
@@ -293,12 +241,12 @@ namespace Dawn_of_War_Definitive_Edition_Hotkey_Editor.Dialogs
                 return;
             }
 
-            _primaryPreview.Text = (_modOnlyHoldPrimary && _committedPrimary != null) ? "…" : (_committedPrimary ?? (pLive ?? "…"));
-
+            _primaryPreview.Text = _primary.PreviewText();
             if (_secondaryAllowedForThisBinding)
-                _secondaryPreview.Text = (_modOnlyHoldSecondary && _committedSecondary != null) ? "…" : (_committedSecondary ?? (sLive ?? "…"));
+                _secondaryPreview.Text = _secondary.PreviewText();
 
-            var primaryReady = (_committedPrimary != null) || (!_modOnlyHoldPrimary && pLive != null);
+            var pLive = _primary.LiveBindingOrNull();
+            var primaryReady = (_primary.Committed != null) || (!_primary.ModOnlyHold && pLive != null);
             _ok.IsEnabled = primaryReady || PrimaryResult == "";
 
             if (_secondaryAllowedForThisBinding)
@@ -319,51 +267,18 @@ namespace Dawn_of_War_Definitive_Edition_Hotkey_Editor.Dialogs
             _primaryLabel.Foreground = _active == ActivePanel.Primary ? WpfColors.HighlightBrush : WpfColors.ControlTextBrush;
 
             _clear.IsEnabled = _active == ActivePanel.Primary
-                || (_secondaryAllowedForThisBinding && (CurrentBindingOrNullSecondary() != null || !string.IsNullOrEmpty(SecondaryResult)));
-        }
-
-
-        private string? CurrentBindingOrNullPrimary()
-        {
-            if (_basePrimary != null) return HotkeyCodec.Compose(_modsPrimary, _basePrimary);
-            if (_modsPrimary.Count == 1) return _modsPrimary.First();
-            return null;
-        }
-
-        private string? CurrentBindingOrNullSecondary()
-        {
-            if (!SecondaryEditable() && string.IsNullOrEmpty(SecondaryResult)) return null;
-            if (_baseSecondary != null) return HotkeyCodec.Compose(_modsSecondary, _baseSecondary);
-            if (_modsSecondary.Count == 1) return _modsSecondary.First();
-            return null;
+                || (_secondaryAllowedForThisBinding && (_secondary.LiveBindingOrNull() != null || !string.IsNullOrEmpty(SecondaryResult)));
         }
 
         private bool SecondaryEditable()
         {
             if (!_secondaryAllowedForThisBinding) return false;
-            return CurrentBindingOrNullPrimary() != null || !string.IsNullOrEmpty(SecondaryResult);
+            return _primary.LiveBindingOrNull() != null || _primary.Committed != null || !string.IsNullOrEmpty(SecondaryResult);
         }
-
-        private void SetInitialPrimary(string s)
-        {
-            HotkeyCodec.Parse(s, out _modsPrimary, out _basePrimary);
-            _baseChosenPrimary = _basePrimary != null;
-            _committedPrimary = s;
-        }
-
-        private void SetInitialSecondary(string s)
-        {
-            HotkeyCodec.Parse(s, out _modsSecondary, out _baseSecondary);
-            _baseChosenSecondary = _baseSecondary != null;
-            _committedSecondary = s;
-            SecondaryResult = s;
-        }
-
 
         public string? Result =>
             (PrimaryResult is null && SecondaryResult is null)
                 ? null
                 : (SecondaryResult is null ? (PrimaryResult ?? "") : $"{PrimaryResult ?? ""}, {SecondaryResult}");
-
     }
 }
