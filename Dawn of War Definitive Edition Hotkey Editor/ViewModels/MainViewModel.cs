@@ -263,15 +263,17 @@ namespace Dawn_of_War_Definitive_Edition_Hotkey_Editor.ViewModels
                 return;
             }
 
-            // Default new name based on current selection (e.g., "MyPreset Copy")
             var baseName = Path.GetFileNameWithoutExtension(SelectedPreset.FileName);
             var newName = $"{baseName} Copy";
 
             var fullPath = PresetService.CreatePresetFromExisting(SelectedPreset.FullPath, newName);
 
-            RefreshPresets();
-            SelectedPreset = Presets.FirstOrDefault(p => p.FullPath.Equals(fullPath, StringComparison.OrdinalIgnoreCase))
-                             ?? SelectedPreset;
+            if(fullPath != null)
+            {
+                RefreshPresets();
+                SelectedPreset = Presets.FirstOrDefault(p => p.FullPath.Equals(fullPath, StringComparison.OrdinalIgnoreCase))
+                                 ?? SelectedPreset;
+            }
         }
 
 

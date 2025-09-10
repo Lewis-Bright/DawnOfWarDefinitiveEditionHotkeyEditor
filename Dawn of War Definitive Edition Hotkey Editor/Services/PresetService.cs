@@ -1,5 +1,6 @@
 using System.IO;
 using System.Text;
+using System.Windows;
 using Dawn_of_War_Definitive_Edition_Hotkey_Editor.Models;
 
 namespace Dawn_of_War_Definitive_Edition_Hotkey_Editor.Services
@@ -60,7 +61,7 @@ namespace Dawn_of_War_Definitive_Edition_Hotkey_Editor.Services
             }
             return list;
         }
-        public static string CreatePresetFromExisting(string baseFullPath, string desiredNameNoExt)
+        public static string? CreatePresetFromExisting(string baseFullPath, string desiredNameNoExt)
         {
             if (string.IsNullOrWhiteSpace(baseFullPath))
                 throw new ArgumentException("Base path is required.", nameof(baseFullPath));
@@ -80,20 +81,22 @@ namespace Dawn_of_War_Definitive_Edition_Hotkey_Editor.Services
 
             if (File.Exists(target))
             {
-                if (IsProtected(Path.GetFileName(target)))
-                {
-                    target = GetUniquePath(dir, safe);
-                }
-                else if (IsPresetEmpty(target))
+                if (IsPresetEmpty(target))
                 {
                     File.SetAttributes(target, FileAttributes.Normal);
                     File.Copy(baseFullPath, target, overwrite: true);
-                    LuaWriter.SetBindingsLocstring(target, Path.GetFileNameWithoutExtension(target));
+                    LuaWriter.SetBindingsLocstring(target, desiredNameNoExt);
                     return target;
                 }
                 else
                 {
-                    target = GetUniquePath(dir, safe);
+                    MessageBox.Show(
+                        "Profile already exists, please pick a different name.",
+                        "Warning",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+
+                    return null;
                 }
             }
             else
@@ -101,7 +104,7 @@ namespace Dawn_of_War_Definitive_Edition_Hotkey_Editor.Services
                 File.Copy(baseFullPath, target, overwrite: false);
             }
 
-            LuaWriter.SetBindingsLocstring(target, Path.GetFileNameWithoutExtension(target));
+            LuaWriter.SetBindingsLocstring(target, desiredNameNoExt);
             return target;
         }
 
