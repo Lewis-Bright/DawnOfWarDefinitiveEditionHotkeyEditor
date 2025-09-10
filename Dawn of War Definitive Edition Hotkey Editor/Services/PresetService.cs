@@ -136,13 +136,5 @@ namespace Dawn_of_War_Definitive_Edition_Hotkey_Editor.Services
                 return false;
             }
         }
-
-        private static string GetUniquePath(string dir, string baseNameNoExt)
-        {
-            var i = 2;
-            var path = Path.Combine(dir, baseNameNoExt + ".lua");
-            while (File.Exists(path)) path = Path.Combine(dir, $"{baseNameNoExt}_{i++}.lua");
-            return path;
-        }
     }
 }

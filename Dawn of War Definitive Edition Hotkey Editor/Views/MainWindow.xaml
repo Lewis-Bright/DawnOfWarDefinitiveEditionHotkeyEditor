@@ -52,7 +52,6 @@
                                 </TextBlock.Style>
                             </TextBlock>
 
-                            <!-- clear “×” button -->
                             <Button Content="×"
                               Width="20" Height="20"
                               HorizontalAlignment="Right"
@@ -64,7 +63,6 @@
                                     <Style TargetType="Button">
                                         <Setter Property="Visibility" Value="Visible"/>
                                         <Style.Triggers>
-                                            <!-- hide when empty -->
                                             <DataTrigger Binding="{Binding Text.Length, RelativeSource={RelativeSource TemplatedParent}}">
                                                 <DataTrigger.Value>
                                                     <sys:Int32>0</sys:Int32>

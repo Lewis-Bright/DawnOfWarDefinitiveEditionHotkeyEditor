@@ -35,8 +35,8 @@ namespace Dawn_of_War_Definitive_Edition_Hotkey_Editor.Views
             if ((sender as FrameworkElement)?.DataContext is not BindingRow row) return;
             if (_vm.IsBaseFileLoaded) return;
 
-            var dlg = new KeyCaptureDialog(this, $"Set binding for {row.DisplayAction}", row.Binding);
-            if (dlg.ShowDialog() == true && !string.IsNullOrWhiteSpace(dlg.Result))
+            var dlg = new KeyCaptureDialog(this, $"Set binding for {row.DisplayAction}", row.Binding, row.SecondaryAllowed);
+            if (dlg.ShowDialog() == true && dlg.Result != null)
             {
                 if (LuaWriter.TryUpdateBinding(_vm.SelectedPreset!.FullPath, row.Table, row.Action, dlg.Result))
                     _vm.ReloadCurrentPreset();

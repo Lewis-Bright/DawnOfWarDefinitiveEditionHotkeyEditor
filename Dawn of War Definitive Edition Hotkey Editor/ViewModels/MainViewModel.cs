@@ -14,6 +14,13 @@ namespace Dawn_of_War_Definitive_Edition_Hotkey_Editor.ViewModels
 {
     public class MainViewModel : INotifyPropertyChanged
     {
+        private static HashSet<string> secondaryAllowedNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        { 
+            "camera_panleft",
+            "camera_pandown",
+            "camera_panup", 
+            "camera_panright",
+        };
 
         private bool _searchMode;
         public bool SearchMode
@@ -156,9 +163,6 @@ namespace Dawn_of_War_Definitive_Edition_Hotkey_Editor.ViewModels
                         list.Add((section, action));
                     }
                 }
-            var conflicts = used.Where(kv => kv.Value.Count > 1)
-                                .ToDictionary(kv => kv.Key, kv => kv.Value, System.StringComparer.OrdinalIgnoreCase);
-            var conflictSet = new HashSet<(string section, string action)>(conflicts.SelectMany(kv => kv.Value));
 
             var rows = new List<BindingRow>();
             foreach (var section in tables.Keys.OrderBy(k => k, System.StringComparer.OrdinalIgnoreCase))
@@ -174,7 +178,7 @@ namespace Dawn_of_War_Definitive_Edition_Hotkey_Editor.ViewModels
                         Action = action,
                         DisplayAction = BeautifyAction(action, catRaw),
                         Binding = binding,
-                        IsConflict = conflictSet.Contains((section, action))
+                        SecondaryAllowed = secondaryAllowedNames.Contains(action)
                     });
                 }
 
@@ -247,8 +251,6 @@ namespace Dawn_of_War_Definitive_Edition_Hotkey_Editor.ViewModels
                 if (SelectedSection == null || string.IsNullOrEmpty(SelectedSection.Raw)) return;
                 q = q.Where(r => r.CategoryRaw == SelectedSection.Raw);
             }
-
-            if (ShowConflictsOnly) q = q.Where(r => r.IsConflict);
 
             foreach (var r in q) Rows.Add(r);
         }
